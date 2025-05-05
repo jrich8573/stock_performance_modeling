@@ -158,6 +158,45 @@ The score is calculated based on:
 The improved implementation provides a much more robust and accurate peer comparison analysis, which is crucial for determining whether a stock is truly underperforming relative to its peers in a realistic way.Attempts Finnhub API as another alternative
 Finally, generates dynamic industry-specific data if all APIs fail
 
+## Version 0.0.3
+I've fixed the `print_results` function to ensure it properly accesses and displays the analysis results. Here are the improvements I made:
+
+1. Auto-run Analysis if Needed:
+
+Added a check to run the analysis if it hasn't been run yet
+This ensures results are always available when printing
+
+
+2. Error Handling:
+
+Added better error handling for nested data access
+Now properly checks if data structures exist before trying to access them
+
+
+3. Current Price Display:
+
+Fixed the way the current stock price is retrieved to prevent potential errors
+Added a default value of 0 if price data is not available
+
+
+4. Added Summary Recommendation:
+
+Added a new "SUMMARY RECOMMENDATION" section
+Provides actionable buy/hold/sell advice based on the underperformance score
+Maps the score to specific recommendations:
+
+- **Score < -2**: "BUY" recommendation
+- **Score -2 to 0**: "HOLD/ACCUMULATE" recommendation
+- **Score 0 to 2**: "HOLD/WATCH" recommendation
+- **Score 2 to 4**: "REDUCE" recommendation
+- **Score ≥ 4**: "SELL/AVOID" recommendation
+
+
+
+
+
+These changes ensure that the `print_results` function will always display complete and accurate information about the stock's performance analysis, regardless of when it's called in the program flow. The added summary recommendation provides a clear actionable takeaway for users based on the comprehensive analysis.
+
 
 ## Contributing
 

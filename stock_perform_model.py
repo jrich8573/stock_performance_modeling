@@ -8,7 +8,6 @@ This model determines if a company's stock is underperforming by:
 4. Measuring against market benchmarks
 5. Forecasting future performance
 
-
 Date: May 5, 2025
 """
 
@@ -1511,6 +1510,10 @@ class StockPerformanceModel:
     
     def print_results(self) -> None:
         """Print the analysis results in a readable format."""
+        # Ensure we have run the analysis first
+        if not self.company_metrics:
+            self.run_analysis()
+            
         print("\n" + "="*40)
         print(f"STOCK PERFORMANCE ANALYSIS: {self.ticker}")
         print("="*40)
@@ -1541,7 +1544,13 @@ class StockPerformanceModel:
         if self.dcf_valuation:
             print(f"WACC: {(self.dcf_valuation.get('wacc', 0) * 100):.2f}%")
             print(f"Implied Share Price: ${self.dcf_valuation.get('implied_share_price', 0):.2f}")
-            print(f"Current Price: ${self.company_data['financials'][0].get('stock_price', 0):.2f}")
+            
+            # Get current price from the company data
+            current_price = 0
+            if self.company_data.get('financials') and len(self.company_data['financials']) > 0:
+                current_price = self.company_data['financials'][0].get('stock_price', 0)
+            
+            print(f"Current Price: ${current_price:.2f}")
             print(f"Upside/Downside: {(self.dcf_valuation.get('upside', 0) * 100):.2f}%")
         
         print("\n--- PEER COMPARISON HIGHLIGHTS ---")
@@ -1556,6 +1565,23 @@ class StockPerformanceModel:
             print("\nKey Factors:")
             for factor in self.underperformance_assessment.get('factors', []):
                 print(f"- {factor}")
+                
+        # Print a summary recommendation
+        print("\n--- SUMMARY RECOMMENDATION ---")
+        if self.underperformance_assessment:
+            assessment = self.underperformance_assessment.get('assessment', '')
+            score = self.underperformance_assessment.get('score', 0)
+            
+            if score < -2:
+                print("BUY: The stock is outperforming expectations and shows strong potential.")
+            elif score >= -2 and score < 0:
+                print("HOLD/ACCUMULATE: The stock is performing in line with expectations with some positive indicators.")
+            elif score >= 0 and score < 2:
+                print("HOLD/WATCH: The stock is slightly underperforming but not significantly concerning.")
+            elif score >= 2 and score < 4:
+                print("REDUCE: The stock is moderately underperforming and may warrant caution.")
+            else:
+                print("SELL/AVOID: The stock is significantly underperforming across multiple metrics.")
 
 
 def main():
