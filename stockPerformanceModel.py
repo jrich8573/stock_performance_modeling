@@ -84,7 +84,7 @@ class StockPerformanceModel:
         
         self.financial_analyzer = FinancialAnalyzer(
             company_data=self.raw_data["company_data"],
-            benchmark_data={},  # No benchmark or peers in public version
+            benchmark_data={},
             peer_companies=[],
             analyst_estimates=self.raw_data["analyst_estimates"]
         )
