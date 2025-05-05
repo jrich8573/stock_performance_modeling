@@ -1,5 +1,5 @@
 """
-Stock Performance Evaluation Model with API Integration
+Stock Performance Evaluation Model with API Integration (Public API Version)
 
 This model determines if a company's stock is underperforming by:
 1. Pulling financial data from public APIs 
@@ -12,11 +12,13 @@ Date: May 5, 2025
 """
 
 import os
-import argparse
-from typing import Dict, List, Any, Optional
+from typing import Dict, Any, Optional
+
+import requests
+import yfinance as yf
 
 # Import the component classes
-from data_fetcher import DataFetcher
+from analyst_estimator import AnalystEstimator
 from financial_analyzer import FinancialAnalyzer
 from results_visualizer import ResultsVisualizer
 from results_reporter import ResultsReporter
@@ -33,35 +35,38 @@ class StockPerformanceModel:
         
         Args:
             ticker: Stock ticker symbol (e.g., 'AAPL')
-            api_key: API key for Financial Modeling Prep API (default: None)
+            api_key: API key for Financial Modeling Prep API (optional)
         """
         self.ticker = ticker.upper()
         self.api_key = api_key or os.environ.get("FMP_API_KEY", "demo")
-        
-        # Component instances
-        self.data_fetcher = None
+
+        # Components
+        self.analyst_estimator = None
         self.financial_analyzer = None
         self.results_visualizer = None
         self.results_reporter = None
         
-        # Data and results containers
+        # Data containers
         self.raw_data = {}
         self.analysis_results = {}
     
     def fetch_data(self) -> Dict[str, Any]:
         """
-        Fetch all necessary data for the analysis.
+        Fetch data using public APIs (yfinance and Alpha Vantage).
         
         Returns:
-            Dictionary containing all fetched data
+            Dictionary with company data and analyst estimates
         """
-        print(f"Fetching data for {self.ticker}...")
+        print(f"Fetching analyst and financial data for {self.ticker}...")
         
-        # Create data fetcher
-        self.data_fetcher = DataFetcher(self.ticker, self.api_key)
+        # Fetch analyst estimates and company data
+        self.analyst_estimator = AnalystEstimator(self.ticker, api_key=self.api_key)
+        analyst_estimates, company_data = self.analyst_estimator.fetch_analyst_estimates()
         
-        # Fetch all data
-        self.raw_data = self.data_fetcher.fetch_all_data()
+        self.raw_data = {
+            "analyst_estimates": analyst_estimates,
+            "company_data": company_data
+        }
         
         return self.raw_data
     
@@ -74,18 +79,16 @@ class StockPerformanceModel:
         """
         print(f"Analyzing data for {self.ticker}...")
         
-        # Ensure we have data
         if not self.raw_data:
             self.fetch_data()
         
-        # Create financial analyzer
         self.financial_analyzer = FinancialAnalyzer(
-            self.raw_data["company_data"],
-            self.raw_data["benchmark_data"],
-            self.raw_data["peer_companies"]
+            company_data=self.raw_data["company_data"],
+            benchmark_data={},  # No benchmark or peers in public version
+            peer_companies=[],
+            analyst_estimates=self.raw_data["analyst_estimates"]
         )
         
-        # Run analysis
         self.analysis_results = self.financial_analyzer.run_analysis()
         
         return self.analysis_results
@@ -99,8 +102,31 @@ class StockPerformanceModel:
         """
         print(f"Creating visualizations for {self.ticker}...")
         
-        # Ensure we have analysis results
         if not self.analysis_results:
             self.analyze_data()
         
-        # Create results visualizer
+        self.results_visualizer = ResultsVisualizer(self.analysis_results)
+        self.results_visualizer.create_charts(output_path)
+
+    def report_results(self, output_path: Optional[str] = None) -> None:
+        """
+        Report the analysis results in a human-readable format.
+        
+        Args:
+            output_path: Optional path to save the report
+        """
+        print(f"Reporting results for {self.ticker}...")
+        
+        if not self.analysis_results:
+            self.analyze_data()
+        
+        self.results_reporter = ResultsReporter(self.analysis_results)
+        self.results_reporter.generate_report(output_path)
+    
+if __name__ == "__main__":
+    model = StockPerformanceModel("AAPL")
+    model.fetch_data()
+    model.analyze_data()
+    model.visualize_results()
+    model.report_results()
+
